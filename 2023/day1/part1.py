@@ -1,10 +1,10 @@
-from typing import List
 import logging
+from typing import List
 
 logger = logging.getLogger(__name__)
 
 
-def parse_input(input) -> List:
+def lines_to_list(input) -> List:
     return [line for line in input.split("\n")]
 
 
@@ -38,10 +38,9 @@ pqr3stu8vwx
 a1b2c3d4e5f
 treb7uchet"""
 
+    example_input_list = lines_to_list(example_input)
     example_solution_lines = [12, 38, 15, 77]
     example_solution = 142
-
-    example_input_list = parse_input(example_input)
 
     for i, line in enumerate(example_input_list):
         left_digit, right_digit = str(example_solution_lines[i])

@@ -1,7 +1,22 @@
-from typing import List
 import logging
+from typing import List
 
 logger = logging.getLogger(__name__)
+
+
+def lines_to_list(input) -> List:
+    return [line for line in input.split("\n")]
+
+
+def solution(lines) -> int:
+    return sum([process_line(line) for line in lines])
+
+
+def process_line(line):
+    result = scan_line(line)
+    logger.debug(f"{result=}")
+    return result
+
 
 DIGITS = {
     "one": 1,
@@ -16,57 +31,68 @@ DIGITS = {
 }
 
 
-def parse_input(input) -> List:
-    return [line for line in input.split("\n")]
+def scan_left_to_right(line):
+    """
+    Start at the beginning of a line and work forwards
+    Check if the first character is a digit
+    If not a digit, check if the line starts with a word in DIGITS
+    If not, look at the next character to the end of the line
+    """
+    index = 0
+    digit = ""
+
+    logger.debug(f"Scanning left to right: {line=}")
+    # starting from left to right
+    while index < len(line) and not digit:
+        text = line[index:]
+        if text[0].isdigit():
+            digit = str(text[0])
+            logger.debug(f"Found {digit=} for {line=}")
+            break
+        else:
+            for word in DIGITS:
+                if text.startswith(word):
+                    digit = str(DIGITS[word])
+                    logger.debug(f"Found {digit=} for {word=} in {line=}")
+                    break
+        index += 1
+    return digit
 
 
-def process_line(line):
-    # print(f"line before: {line}")
-    words_found = scan_line_words(line)
-    if not words_found:
-        left_pointer = scan_line(line, "left")
-        right_pointer = scan_line(line, "right")
-        return int(left_pointer + right_pointer)
-    print(f"{words_found=} {line=}")
+def scan_right_to_left(line):
+    """
+    Start at the end of a line and work backwards
+    Check if the last character is a digit
+    If not a digit, check if the line ends with a word in DIGITS
+    If not, reduce the line by 1 character and look at remaining characters
+    """
+    index = len(line)
+    digit = ""
 
-    first_word = min(words_found, key=words_found.get)
-    print(f"first_word={first_word}")
-
-    print(f"line before: {line}")
-    line.replace(first_word, str(DIGITS[first_word]))
-    print(f"line after: {line}")
-    # process_line(line)
-    # for k, v in words_found.items():
-    #     line = line.replace(k, str(v))
-    #
-    return line
-
-
-def scan_line(line, side):
-    step = 1
-    if side == "right":
-        step = -1
-    for i, char in enumerate(line[::step]):
-        if char.isdigit():
-            return char
-    return ""
+    logger.debug(f"Scanning right to left: {line=}")
+    while index >= 0 and not digit:
+        logger.debug(f"{index=} at start")
+        text = line[:index]
+        logger.debug(f"{text=}")
+        if text[-1].isdigit():
+            digit = str(text[-1])
+            logger.debug(f"Found {digit=} for {line=}")
+            return digit
+        else:
+            for word in DIGITS:
+                if text.endswith(word):
+                    digit = str(DIGITS[word])
+                    logger.debug(f"Found {digit=} for {word=} in {line=}")
+                    return digit
+        index -= 1
+        logger.debug(f"{index=} at end")
 
 
-def scan_line_words(line):
-    words_found = {}
-    for k, v in DIGITS.items():
-        word_start_index = line.find(k)
-        if word_start_index != -1:
-            words_found[k] = word_start_index
+def scan_line(line):
+    left_digit = scan_left_to_right(line)
+    right_digit = scan_right_to_left(line)
 
-    # print(f"words_found: {words_found} in {line}")
-
-    # print(f"line after: {line}")
-    return words_found
-
-
-def solution(lines) -> int:
-    return sum([process_line(line) for line in lines])
+    return int(f"{left_digit}{right_digit}")
 
 
 def test_part2():
@@ -78,34 +104,21 @@ xtwone3four
 zoneight234
 7pqrstsixteen"""
 
+    example_input_list = lines_to_list(example_input)
     example_solution_lines = [29, 83, 13, 24, 42, 14, 76]
     example_solution = 281
 
-    example_input_list = parse_input(example_input)
+    solution_lines = [process_line(line) for line in example_input_list]
+    logging.info(f"Got: {solution_lines=} Expected: {example_solution_lines=}")
+    assert solution_lines == example_solution_lines
 
-    # for i, line in enumerate(example_input_list):
-    # left_digit, right_digit = str(example_solution_lines[i])
-
-    result = [process_line(line) for line in example_input_list]
-    logging.debug(result)
-    #     assert result.isdigit()
-    #     assert result == left_digit
-    #
-    #     result = scan_line(line, "right")
-    #     assert result.isdigit()
-    #     assert result == right_digit
-    #
-    #     result = process_line(line)
-    #     assert result == example_solution_lines[i]
-    #
-    # solution_lines = [process_line(line) for line in example_input_list]
-    # assert solution_lines == example_solution_lines
-    #
-    # assert solution(example_input_list) == example_solution
+    result = solution(example_input_list)
+    logging.info(f"Got: {result=} Expected: {example_solution=}")
+    assert result == example_solution
 
 
 if __name__ == "__main__":
     with open("input.txt") as f:
         input = f.read().splitlines()
 
-    print(f"solution: {solution(input)}")
+    logging.critical(f"Solution: {solution(input)}")
