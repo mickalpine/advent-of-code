@@ -13,46 +13,56 @@ def solution(lines) -> int:
 
 
 def process_lines(lines):
-    result = 0
-
+    game_dict = {}
+    logger.info("Begin processing original cards")
     for i, line in enumerate(lines):
-        win_count = process_line(line)
-        # logger.debug(f"{win_count=}")
-        new_cards = lines[i + 1 : win_count + 1]
-        logger.info(new_cards)
+        game_id, win_count = process_line(line)
+        game_dict[int(game_id)] = win_count
+        # logger.debug(f"{game_dict=}")
+    logger.info(f"Processed original cards: {game_dict=}")
 
-        process_lines(new_cards)
-        if not new_cards:
-            return result
+    logger.info("Begin getting copies")
+    copied_cards = {id: 1 for id, _ in game_dict.items()}  # Initialize to 1
+    for game_id, win_count in game_dict.items():
+        for _ in range(copied_cards[game_id]):
+            for i in range(game_id + 1, game_id + win_count + 1):
+                logger.debug(f"Adding 1 to game_id {i}")
+                copied_cards[i] += 1
+        logger.debug(f"{copied_cards=}")
 
-    return result
+    logger.info(f"Processed getting {copied_cards=}")
+
+    return [x for x in copied_cards.values()]
 
 
 def process_line(line):
     result = 0
-    winning_nums, my_nums = parse_line(line)
+    game_id, winning_nums, my_nums = parse_line(line)
     # logger.debug(f"{winning_nums=}, {my_nums=}")
 
     matching_nums = set(winning_nums).intersection(my_nums)
     # logger.debug(f"Line {line_num}: {matching_nums=}")
 
     if not matching_nums:
-        return result
+        return game_id, result
 
     result = len(matching_nums)
     # logger.info(f"{result} wins for {line}")
 
-    return result
+    return game_id, result
 
 
 def parse_line(line):
     winning_list, my_list = line.split(" | ")
+    game_id = winning_list.split(":")[0]
+    game_id = game_id.split()[-1]
+
     winning_list = winning_list.split(": ")[-1]
     winning_list = [x.strip() for x in winning_list.split()]
 
     my_list = [x.strip() for x in my_list.split()]
 
-    return winning_list, my_list
+    return game_id, winning_list, my_list
 
 
 def test_part2():
